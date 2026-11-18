@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polinômios de Taylor - @calculo1.redmatuff</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- KaTeX CDN for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- Plotly.js CDN for Interactive Plotting -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        redmat: {
+                            cyan: '#00e5ff',
+                            cyanDark: '#00b8cc',
+                            red: '#ff3333',
+                            blue: '#4db8ff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(#e5e7eb 1px, transparent 1px), 
+                linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .tab-btn.active {
+            border-bottom: 4px solid #ff3333;
+            color: #ff3333;
+            font-weight: 700;
+        }
+        .katex-display {
+            margin: 0.5em 0 !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0;
+        }
+        
+        .btn-redmat {
+            background-color: #00e5ff;
+            color: #000;
+            border: 2px solid #000;
+            border-bottom: 4px solid #000;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.1s;
+        }
+        .btn-redmat:active {
+            border-bottom: 2px solid #000;
+            transform: translateY(2px);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b-4 border-redmat-cyan shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <div class="flex items-center space-x-3">
+                    <img src="https://placehold.co/100x100/00e5ff/000000?text=Redmat" alt="Redmat Cálculo 1" class="h-14 object-contain rounded-lg border-2 border-black">
+                    <div class="hidden sm:block">
+                        <span class="font-bold text-lg tracking-tight text-slate-900 block leading-none">@calculo1.redmatuff</span>
+                        <span class="text-xs text-slate-500 font-semibold">Polinômios de Taylor</span>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex space-x-2 sm:space-x-6">
+                    <button onclick="switchTab('teoria')" id="tab-btn-teoria" class="tab-btn active px-2 py-6 text-sm font-bold text-slate-600 hover:text-redmat-red transition">
+                        <i class="fa-solid fa-book-open mr-1.5"></i> Teoria & Erro
+                    </button>
+                    <button onclick="switchTab('visualizador')" id="tab-btn-visualizador" class="tab-btn px-2 py-6 text-sm font-bold text-slate-600 hover:text-redmat-red transition">
+                        <i class="fa-solid fa-sliders mr-1.5"></i> Visualizador
+                    </button>
+                    <button onclick="switchTab('jogo')" id="tab-btn-jogo" class="tab-btn px-2 py-6 text-sm font-bold text-slate-600 hover:text-redmat-red transition">
+                        <i class="fa-solid fa-gamepad mr-1.5"></i> Desafio Taylor
+                    </button>
+                </nav>
+            </div>
+        </div>
+        <div class="md:hidden border-t border-slate-200 flex justify-around bg-white text-xs py-2">
+            <button onclick="switchTab('teoria')" id="mob-tab-teoria" class="p-2 text-redmat-red font-bold flex flex-col items-center">
+                <i class="fa-solid fa-book-open mb-1"></i> Teoria
+            </button>
+            <button onclick="switchTab('visualizador')" id="mob-tab-visualizador" class="p-2 text-slate-500 font-bold flex flex-col items-center">
+                <i class="fa-solid fa-sliders mb-1"></i> Gráficos
+            </button>
+            <button onclick="switchTab('jogo')" id="mob-tab-jogo" class="p-2 text-slate-500 font-bold flex flex-col items-center">
+                <i class="fa-solid fa-gamepad mb-1"></i> Desafio
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="section-teoria" class="space-y-8">
+            <div class="bg-redmat-cyan border-4 border-slate-900 rounded-2xl p-6 sm:p-10 text-slate-900 shadow-[8px_8px_0px_rgba(0,0,0,1)] relative overflow-hidden">
+                <div class="relative z-10 max-w-3xl">
+                    <span class="bg-white text-slate-900 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border-2 border-slate-900">Cálculo Diferencial</span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold mt-4 mb-4 leading-tight uppercase">Aproximando Funções Complexas com Polinômios</h1>
+                    <p class="text-slate-800 font-medium text-base sm:text-lg leading-relaxed bg-white/50 p-4 rounded-xl border-2 border-slate-900 inline-block">
+                        Os <strong>Polinômios de Taylor</strong> permitem transformar funções complicadas (como seno, exponencial ou logaritmo) em polinômios fáceis de calcular, derivar e integrar.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl p-6 shadow-md border-2 border-slate-900 transition">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-redmat-red p-2.5 rounded-lg text-white border-2 border-slate-900">
+                            <i class="fa-solid fa-square-root-variable text-xl"></i>
+                        </div>
+                        <h2 class="text-xl font-black text-slate-900 uppercase">O que é o Polinômio?</h2>
+                    </div>
+                    <p class="text-slate-700 font-medium mb-4 text-sm sm:text-base leading-relaxed">
+                        Dada uma função $f(x)$ infinitamente derivável em torno de um ponto de expansão $x = a$, o <strong>Polinômio de Taylor de grau $n$</strong> é definido por:
+                    </p>
+                    <div class="bg-slate-50 border-l-8 border-redmat-cyan p-4 rounded-r-lg my-4 font-mono text-sm sm:text-base border-y-2 border-r-2 border-slate-900">
+                        $$P_n(x) = \sum_{k=0}^{n} \frac{f^{(k)}(a)}{k!}(x-a)^k$$
+                    </div>
+                    <p class="text-slate-700 font-medium text-sm leading-relaxed">
+                        Expandindo os termos da soma, obtemos a forma explícita:
+                    </p>
+                    <div class="bg-slate-50 p-3 rounded-lg my-2 text-xs sm:text-sm border-2 border-slate-900 font-mono">
+                        $$P_n(x) = f(a) + f'(a)(x-a) + \frac{f''(a)}{2!}(x-a)^2 + \dots + \frac{f^{(n)}(a)}{n!}(x-a)^n$$
+                    </div>
+                    <p class="text-xs text-redmat-red font-bold mt-2">
+                        *Nota: Quando o ponto de expansão é $a = 0$, o polinômio também é chamado de Série/Polinômio de Maclaurin.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-md border-2 border-slate-900 transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="bg-redmat-blue p-2.5 rounded-lg text-white border-2 border-slate-900">
+                                <i class="fa-solid fa-bullseye text-xl"></i>
+                            </div>
+                            <h2 class="text-xl font-black text-slate-900 uppercase">Ideia Intuitiva</h2>
+                        </div>
+                        <p class="text-slate-700 font-bold text-sm sm:text-base leading-relaxed mb-4">
+                            Como aproximar uma curva no ponto $a$?
+                        </p>
+                        <ul class="space-y-3 text-sm text-slate-700 font-medium">
+                            <li class="flex items-start bg-slate-50 p-2 rounded-lg border border-slate-300">
+                                <i class="fa-solid fa-check text-redmat-cyan text-lg mt-0.5 mr-2" style="-webkit-text-stroke: 1px black;"></i>
+                                <span><strong>Grau $n=0$:</strong> Igualamos apenas o valor da função no ponto ($P_0(a) = f(a)$).</span>
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-2 rounded-lg border border-slate-300">
+                                <i class="fa-solid fa-check text-redmat-cyan text-lg mt-0.5 mr-2" style="-webkit-text-stroke: 1px black;"></i>
+                                <span><strong>Grau $n=1$:</strong> Igualamos o valor e a inclinação (reta tangente $P_1'(a) = f'(a)$).</span>
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-2 rounded-lg border border-slate-300">
+                                <i class="fa-solid fa-check text-redmat-cyan text-lg mt-0.5 mr-2" style="-webkit-text-stroke: 1px black;"></i>
+                                <span><strong>Grau $n=2$:</strong> Igualamos também a curvatura (concavidade $P_2''(a) = f''(a)$).</span>
+                            </li>
+                            <li class="flex items-start bg-slate-50 p-2 rounded-lg border border-slate-300">
+                                <i class="fa-solid fa-check text-redmat-cyan text-lg mt-0.5 mr-2" style="-webkit-text-stroke: 1px black;"></i>
+                                <span><strong>Grau $n$ alto:</strong> O polinômio "copia" o comportamento das derivadas superiores no ponto $a$.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-md border-2 border-slate-900">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="bg-amber-400 p-2.5 rounded-lg text-slate-900 border-2 border-slate-900">
+                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900 uppercase">Teorema do Resto & Análise do Erro</h2>
+                        <p class="text-xs text-slate-600 font-bold">Como saber a precisão da aproximação?</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-sm sm:text-base text-slate-700 font-medium">
+                    <p>
+                        Quando substituímos a função original $f(x)$ pelo seu polinômio de Taylor $P_n(x)$, cometemos um erro de aproximação $R_n(x)$, tal que:
+                    </p>
+                    <div class="text-center bg-amber-50 p-3 rounded-lg border-2 border-slate-900 font-mono">
+                        $$f(x) = P_n(x) + R_n(x) \implies R_n(x) = f(x) - P_n(x)$$
+                    </div>
+
+                    <p><strong>Fórmula do Resto de Lagrange:</strong> O erro exato pode ser escrito como:</p>
+                    <div class="bg-slate-50 p-3 rounded-lg border-l-8 border-amber-400 border-y-2 border-r-2 border-slate-900 font-mono text-sm sm:text-base">
+                        $$R_n(x) = \frac{f^{(n+1)}(c)}{(n+1)!}(x-a)^{n+1}$$
+                    </div>
+                    <p class="text-xs text-slate-500 font-bold">
+                        * Onde $c$ é um valor desconhecido situado entre o ponto de expansão $a$ e o ponto de avaliação $x$.
+                    </p>
+
+                    <div class="border-2 border-slate-900 rounded-xl p-5 bg-redmat-cyan/20 mt-6 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                        <h4 class="font-black text-slate-900 text-lg mb-3 uppercase flex items-center">
+                            <i class="fa-solid fa-lightbulb text-amber-500 mr-2" style="-webkit-text-stroke: 1px black;"></i> 
+                            Exemplo Prático de Estimativa de Erro
+                        </h4>
+                        <p class="text-sm text-slate-800 font-medium leading-relaxed mb-3">
+                            Vamos estimar o valor de $e^{0.5}$ usando o Polinômio de Taylor de ordem $n=3$ em torno de $a=0$:
+                        </p>
+                        <ol class="list-decimal list-inside text-sm text-slate-800 space-y-2 font-mono bg-white p-4 rounded-lg border-2 border-slate-900">
+                            <li>$P_3(x) = 1 + x + \frac{x^2}{2} + \frac{x^3}{6}$</li>
+                            <li>Para $x = 0.5$: $P_3(0.5) = 1 + 0.5 + \frac{0.25}{2} + \frac{0.125}{6} \approx 1.645833$</li>
+                            <li>Como $f^{(4)}(t) = e^t$, o seu máximo no intervalo $[0, 0.5]$ é $M = e^{0.5} < 2$.</li>
+                            <li>Cota do Erro: $|R_3(0.5)| \le \frac{2}{4!}|0.5 - 0|^4 = \frac{2}{24}(0.0625) \approx 0.005208$.</li>
+                        </ol>
+                        <p class="text-sm text-slate-700 font-bold mt-3 bg-white p-2 rounded border border-slate-300">
+                            Conclusão: O valor real de $e^{0.5} \approx 1.648721$. O erro real é $0.002888$, que é perfeitamente menor do que a cota teórica calculada ($0.005208$).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-visualizador" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 bg-white p-5 rounded-xl shadow-md border-2 border-slate-900 space-y-5">
+                    <h2 class="text-lg font-black text-slate-900 uppercase border-b-2 border-slate-200 pb-3">
+                        <i class="fa-solid fa-sliders text-redmat-cyan mr-2" style="-webkit-text-stroke: 1px black;"></i> 
+                        Parâmetros
+                    </h2>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Escolha a Função $f(x)$</label>
+                        <select id="select-func" onchange="updatePlot()" class="w-full bg-slate-50 border-2 border-slate-900 text-slate-800 font-bold text-sm rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-redmat-cyan">
+                            <option value="exp">f(x) = e^x</option>
+                            <option value="sin">f(x) = sin(x)</option>
+                            <option value="cos">f(x) = cos(x)</option>
+                            <option value="ln">f(x) = ln(1 + x)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-bold text-slate-700 uppercase">Grau ($n$)</label>
+                            <span id="val-n" class="text-sm font-black text-slate-900 bg-redmat-cyan px-2 py-0.5 rounded border border-slate-900">3</span>
+                        </div>
+                        <input id="slider-n" type="range" min="0" max="10" step="1" value="3" oninput="updatePlot()" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-bold text-slate-700 uppercase">Expansão ($a$)</label>
+                            <span id="val-a" class="text-sm font-black text-slate-900 bg-amber-400 px-2 py-0.5 rounded border border-slate-900">0.0</span>
+                        </div>
+                        <input id="slider-a" type="range" min="-2" max="2" step="0.1" value="0" oninput="updatePlot()" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-bold text-slate-700 uppercase">Avaliação ($x$)</label>
+                            <span id="val-x" class="text-sm font-black text-white bg-redmat-red px-2 py-0.5 rounded border border-slate-900">1.0</span>
+                        </div>
+                        <input id="slider-x" type="range" min="-3" max="3" step="0.05" value="1.0" oninput="updatePlot()" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-lg border-2 border-slate-900">
+                        <div class="text-xs font-black text-slate-500 uppercase mb-1">Expressão de $P_n(x)$:</div>
+                        <div id="katex-poly-expr" class="text-sm overflow-x-auto text-slate-900 font-bold py-1"></div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-8 bg-white p-5 rounded-xl shadow-md border-2 border-slate-900 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-md font-black uppercase text-slate-800">Gráfico: $f(x)$ vs $P_n(x)$</h3>
+                        <span class="text-xs text-slate-500 font-bold"><i class="fa-solid fa-hand-pointer mr-1"></i> Arraste para mover</span>
+                    </div>
+                    <div id="plot-container" class="w-full h-[380px] rounded-lg border-2 border-slate-200"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border-2 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                    <div class="text-xs font-black text-slate-600 uppercase">Valor Exato $f(x)$</div>
+                    <div id="metric-exact" class="text-xl font-black text-slate-900 mt-1">0.0000</div>
+                </div>
+                <div class="bg-redmat-cyan p-4 rounded-xl border-2 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                    <div class="text-xs font-black text-slate-800 uppercase">Aproximação $P_n(x)$</div>
+                    <div id="metric-approx" class="text-xl font-black text-slate-900 mt-1">0.0000</div>
+                </div>
+                <div class="bg-redmat-red p-4 rounded-xl border-2 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                    <div class="text-xs font-black text-white uppercase">Erro Real $|f(x) - P_n(x)|$</div>
+                    <div id="metric-error" class="text-xl font-black text-white mt-1">0.0000</div>
+                </div>
+                <div class="bg-amber-400 p-4 rounded-xl border-2 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                    <div class="text-xs font-black text-slate-900 uppercase">Cota de Lagrange</div>
+                    <div id="metric-lagrange" class="text-xl font-black text-slate-900 mt-1">0.0000</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-jogo" class="space-y-6 hidden">
+            <div class="bg-white border-4 border-slate-900 text-slate-900 p-6 rounded-2xl shadow-[8px_8px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-redmat-cyan rounded-full -mr-10 -mt-10 opacity-50 z-0"></div>
+                <div class="absolute bottom-0 right-40 w-16 h-16 bg-redmat-red rounded-full -mb-5 opacity-50 z-0"></div>
+
+                <div class="flex items-center space-x-4 relative z-10">
+                    <div class="bg-slate-900 p-3 rounded-xl text-white font-bold text-2xl border-2 border-slate-900">
+                        <i class="fa-solid fa-trophy text-amber-400"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black uppercase tracking-tight">Desafio Redmat</h2>
+                        <p class="text-sm text-slate-600 font-bold">Teste os seus conhecimentos de cálculo!</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-6 bg-slate-100 px-5 py-3 rounded-xl border-2 border-slate-900 relative z-10">
+                    <div class="text-center">
+                        <div class="text-xs text-slate-500 uppercase font-black">Pontos</div>
+                        <div id="game-score" class="text-2xl font-black text-slate-900">0</div>
+                    </div>
+                    <div class="w-px h-8 bg-slate-300"></div>
+                    <div class="text-center">
+                        <div class="text-xs text-slate-500 uppercase font-black">Combo</div>
+                        <div id="game-streak" class="text-2xl font-black text-redmat-red">0 🔥</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center space-x-3">
+                <button id="btn-mode-1" onclick="setGameMode(1)" class="btn-redmat px-5 py-2.5 text-sm">
+                    <i class="fa-solid fa-calculator mr-2"></i> Modo 1: Coeficientes
+                </button>
+                <button id="btn-mode-2" onclick="setGameMode(2)" class="px-5 py-2.5 rounded-lg font-bold text-sm transition bg-white text-slate-700 border-2 border-slate-900 hover:bg-slate-100 shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                    <i class="fa-solid fa-bullseye mr-2"></i> Modo 2: Erro Mínimo
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border-4 border-slate-900 shadow-[8px_8px_0px_rgba(0,0,0,1)] relative min-h-[350px] flex flex-col justify-between">
+                
+                <div class="flex justify-between items-center mb-4">
+                    <span id="game-mode-tag" class="text-xs font-black uppercase tracking-wider text-slate-900 bg-redmat-cyan px-3 py-1 rounded border-2 border-slate-900">
+                        Modo 1
+                    </span>
+                </div>
+
+                <div class="my-4">
+                    <h3 id="game-question-text" class="text-lg sm:text-xl font-bold text-slate-900 mb-3">
+                        A carregar desafio...
+                    </h3>
+                    <div id="game-question-math" class="bg-slate-50 p-4 rounded-xl text-center text-slate-900 text-lg sm:text-xl font-mono border-2 border-slate-900">
+                        $$...$$
+                    </div>
+                </div>
+
+                <div id="game-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+                </div>
+
+                <div id="game-feedback" class="hidden p-4 rounded-xl text-sm font-medium leading-relaxed transition-all my-2 border-2"></div>
+
+                <div class="flex justify-end mt-4">
+                    <button id="btn-next-question" onclick="generateQuestion()" class="hidden btn-redmat px-6 py-2.5 text-sm bg-amber-400">
+                        Próximo Desafio <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-white text-xs py-6 border-t-4 border-redmat-cyan mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="font-bold text-sm uppercase">@calculo1.redmatuff</p>
+            <p class="text-slate-400">Polinômios de Taylor & Estimativa de Erro</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tabId) {
+            ['teoria', 'visualizador', 'jogo'].forEach(id => {
+                const sec = document.getElementById(`section-${id}`);
+                const btn = document.getElementById(`tab-btn-${id}`);
+                const mobBtn = document.getElementById(`mob-tab-${id}`);
+                
+                if (id === tabId) {
+                    sec.classList.remove('hidden');
+                    if (btn) btn.classList.add('active');
+                    if (mobBtn) {
+                        mobBtn.classList.remove('text-slate-500');
+                        mobBtn.classList.add('text-redmat-red');
+                    }
+                } else {
+                    sec.classList.add('hidden');
+                    if (btn) btn.classList.remove('active');
+                    if (mobBtn) {
+                        mobBtn.classList.remove('text-redmat-red');
+                        mobBtn.classList.add('text-slate-500');
+                    }
+                }
+            });
+
+            if (tabId === 'visualizador') {
+                setTimeout(updatePlot, 50);
+            }
+        }
+
+        function factorial(n) {
+            if (n <= 1) return 1;
+            let res = 1;
+            for (let i = 2; i <= n; i++) res *= i;
+            return res;
+        }
+
+        function getDerivValue(funcKey, k, x) {
+            if (funcKey === 'exp') return Math.exp(x);
+            if (funcKey === 'sin') {
+                const rem = k % 4;
+                if (rem === 0) return Math.sin(x);
+                if (rem === 1) return Math.cos(x);
+                if (rem === 2) return -Math.sin(x);
+                if (rem === 3) return -Math.cos(x);
+            }
+            if (funcKey === 'cos') {
+                const rem = k % 4;
+                if (rem === 0) return Math.cos(x);
+                if (rem === 1) return -Math.sin(x);
+                if (rem === 2) return -Math.cos(x);
+                if (rem === 3) return Math.sin(x);
+            }
+            if (funcKey === 'ln') {
+                if (k === 0) return Math.log(1 + x);
+                const sign = (k % 2 === 0) ? -1 : 1;
+                const fact = factorial(k - 1);
+                return sign * fact * Math.pow(1 + x, -k);
+            }
+            return 0;
+        }
+
+        function evalExactFunc(funcKey, x) {
+            if (funcKey === 'exp') return Math.exp(x);
+            if (funcKey === 'sin') return Math.sin(x);
+            if (funcKey === 'cos') return Math.cos(x);
+            if (funcKey === 'ln') return Math.log(1 + x);
+            return 0;
+        }
+
+        function evalTaylorPoly(funcKey, n, a, x) {
+            let sum = 0;
+            for (let k = 0; k <= n; k++) {
+                const coeff = getDerivValue(funcKey, k, a) / factorial(k);
+                sum += coeff * Math.pow(x - a, k);
+            }
+            return sum;
+        }
+
+        function calcLagrangeBound(funcKey, n, a, x) {
+            const nextOrder = n + 1;
+            const tMin = Math.min(a, x);
+            const tMax = Math.max(a, x);
+            let maxDeriv = 0;
+
+            const steps = 50;
+            const dt = (tMax - tMin) / steps;
+            for (let i = 0; i <= steps; i++) {
+                const t = tMin + i * dt;
+                const val = Math.abs(getDerivValue(funcKey, nextOrder, t));
+                if (val > maxDeriv) maxDeriv = val;
+            }
+
+            if (funcKey === 'sin' || funcKey === 'cos') maxDeriv = 1;
+
+            const bound = (maxDeriv * Math.pow(Math.abs(x - a), nextOrder)) / factorial(nextOrder);
+            return { bound, maxDeriv };
+        }
+
+        function generateLaTeXPoly(funcKey, n, a) {
+            let terms = [];
+            for (let k = 0; k <= n; k++) {
+                const der = getDerivValue(funcKey, k, a);
+                const coeff = der / factorial(k);
+
+                if (Math.abs(coeff) < 1e-7) continue;
+
+                let coeffStr = '';
+                const signStr = (coeff < 0) ? ' - ' : (terms.length > 0 ? ' + ' : '');
+                const absCoeff = Math.abs(coeff);
+
+                if (k === 0) {
+                    coeffStr = absCoeff.toFixed(3).replace(/\.?0+$/, '');
+                } else {
+                    if (Math.abs(absCoeff - 1) < 1e-5) coeffStr = '';
+                    else coeffStr = absCoeff.toFixed(3).replace(/\.?0+$/, '');
+                }
+
+                let termStr = '';
+                if (k === 0) {
+                    termStr = coeffStr;
+                } else {
+                    let diffStr = '';
+                    if (Math.abs(a) < 1e-5) {
+                        diffStr = k === 1 ? 'x' : `x^{${k}}`;
+                    } else {
+                        const aSign = a > 0 ? `- ${a.toFixed(1)}` : `+ ${Math.abs(a).toFixed(1)}`;
+                        diffStr = k === 1 ? `(x ${aSign})` : `(x ${aSign})^{${k}}`;
+                    }
+                    termStr = coeffStr + diffStr;
+                }
+
+                terms.push(signStr + termStr);
+            }
+            if (terms.length === 0) return 'P_' + n + '(x) = 0';
+            return 'P_{' + n + '}(x) = ' + terms.join('');
+        }
+
+        function updatePlot() {
+            const funcKey = document.getElementById('select-func').value;
+            const n = parseInt(document.getElementById('slider-n').value);
+            const a = parseFloat(document.getElementById('slider-a').value);
+            const xEval = parseFloat(document.getElementById('slider-x').value);
+
+            document.getElementById('val-n').innerText = n;
+            document.getElementById('val-a').innerText = a.toFixed(1);
+            document.getElementById('val-x').innerText = xEval.toFixed(2);
+
+            if (funcKey === 'ln' && (a <= -1 || xEval <= -1)) {
+                // Modified alert as per system constraints to avoid breaking UI preview
+                const alertBox = document.createElement('div');
+                alertBox.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-slate-900 font-bold p-6 rounded-xl border-4 border-slate-900 shadow-[8px_8px_0px_rgba(0,0,0,1)] z-[100] transition-all';
+                alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Para a função ln(1+x), x e a devem ser maiores que -1.';
+                document.body.appendChild(alertBox);
+                setTimeout(() => alertBox.remove(), 3500);
+
+                document.getElementById('slider-a').value = 0;
+                document.getElementById('slider-x').value = 0.5;
+                return updatePlot();
+            }
+
+            const latexPoly = generateLaTeXPoly(funcKey, n, a);
+            katex.render(latexPoly, document.getElementById('katex-poly-expr'), { throwOnError: false });
+
+            let xMin = a - 3;
+            let xMax = a + 3;
+            if (funcKey === 'ln') xMin = Math.max(-0.95, a - 2);
+
+            const xVals = [], yExact = [], yApprox = [];
+            const step = (xMax - xMin) / 200;
+            for (let i = 0; i <= 200; i++) {
+                const x = xMin + i * step;
+                xVals.push(x);
+                yExact.push(evalExactFunc(funcKey, x));
+                yApprox.push(evalTaylorPoly(funcKey, n, a, x));
+            }
+
+            const traceExact = {
+                x: xVals, y: yExact, mode: 'lines', name: 'f(x)', line: { color: '#000', width: 3 }
+            };
+            const traceApprox = {
+                x: xVals, y: yApprox, mode: 'lines', name: `P_${n}(x)`, line: { color: '#ff3333', width: 2.5, dash: 'dash' }
+            };
+
+            Plotly.newPlot('plot-container', [traceExact, traceApprox], {
+                margin: { t: 10, r: 10, l: 30, b: 30 },
+                xaxis: { title: 'x' }, yaxis: { title: 'y' }
+            }, { responsive: true, displayModeBar: false });
+
+            const valExact = evalExactFunc(funcKey, xEval);
+            const valApprox = evalTaylorPoly(funcKey, n, a, xEval);
+            const realError = Math.abs(valExact - valApprox);
+            const { bound } = calcLagrangeBound(funcKey, n, a, xEval);
+
+            document.getElementById('metric-exact').innerText = valExact.toFixed(5);
+            document.getElementById('metric-approx').innerText = valApprox.toFixed(5);
+            document.getElementById('metric-error').innerText = realError.toExponential(3);
+            document.getElementById('metric-lagrange').innerText = bound.toExponential(3);
+        }
+
+        let gameState = { mode: 1, score: 0, streak: 0, currentQuestion: null, answered: false };
+
+        function setGameMode(mode) {
+            gameState.mode = mode;
+            const btn1 = document.getElementById('btn-mode-1');
+            const btn2 = document.getElementById('btn-mode-2');
+            
+            if(mode === 1) {
+                btn1.className = 'btn-redmat px-5 py-2.5 text-sm';
+                btn2.className = 'px-5 py-2.5 rounded-lg font-bold text-sm transition bg-white text-slate-700 border-2 border-slate-900 hover:bg-slate-100 shadow-[2px_2px_0px_rgba(0,0,0,1)]';
+                document.getElementById('game-mode-tag').innerText = 'Modo 1: Coeficientes';
+            } else {
+                btn2.className = 'btn-redmat px-5 py-2.5 text-sm';
+                btn1.className = 'px-5 py-2.5 rounded-lg font-bold text-sm transition bg-white text-slate-700 border-2 border-slate-900 hover:bg-slate-100 shadow-[2px_2px_0px_rgba(0,0,0,1)]';
+                document.getElementById('game-mode-tag').innerText = 'Modo 2: Erro Mínimo';
+            }
+            generateQuestion();
+        }
+
+        function formatTermTex(coeff, k, a) {
+            if (Math.abs(coeff) < 1e-5) return '0';
+            const sign = coeff < 0 ? '-' : '';
+            const absC = Math.abs(coeff);
+            let fracStr = '';
+            if (Math.abs(absC - 1) < 1e-5) fracStr = '';
+            else if (Math.abs(absC - 0.5) < 1e-5) fracStr = '\\frac{1}{2}';
+            else if (Math.abs(absC - 1/6) < 1e-5) fracStr = '\\frac{1}{6}';
+            else if (Math.abs(absC - 1/24) < 1e-5) fracStr = '\\frac{1}{24}';
+            else fracStr = absC.toFixed(2);
+            return `${sign}${fracStr} x^{${k}}`;
+        }
+
+        function generateQuestion() {
+            gameState.answered = false;
+            document.getElementById('game-feedback').classList.add('hidden');
+            document.getElementById('btn-next-question').classList.add('hidden');
+
+            if (gameState.mode === 1) {
+                const funcs = [{ key: 'exp', tex: 'f(x) = e^x', a: 0 }, { key: 'sin', tex: 'f(x) = \\sin(x)', a: 0 }, { key: 'cos', tex: 'f(x) = \\cos(x)', a: 0 }];
+                const target = funcs[Math.floor(Math.random() * funcs.length)];
+                const k = Math.floor(Math.random() * 4) + 1;
+
+                const derVal = getDerivValue(target.key, k, target.a);
+                const correctCoeff = derVal / factorial(k);
+                const correctTex = formatTermTex(correctCoeff, k, target.a);
+                
+                let options = [{ tex: correctTex, correct: true }];
+                [correctCoeff * -1, derVal, derVal / factorial(k + 1), correctCoeff === 0 ? 1 : 0].forEach(c => {
+                    if (options.length < 4) {
+                        const wTex = formatTermTex(c, k, target.a);
+                        if (!options.some(o => o.tex === wTex)) options.push({ tex: wTex, correct: false });
+                    }
+                });
+                
+                while(options.length < 4) options.push({ tex: `\\frac{x^{${k}}}{${k+2}}`, correct: false });
+                options.sort(() => Math.random() - 0.5);
+
+                gameState.currentQuestion = {
+                    text: `Qual é o termo de grau $k = ${k}$ no Polinômio para a função abaixo em $a = ${target.a}$?`,
+                    math: target.tex,
+                    options: options,
+                    explanation: `A fórmula do termo é $\\frac{f^{(${k})}(a)}{${k}!}(x-a)^{${k}}$. Como a derivada avaliada no ponto é $${derVal.toFixed(1)}$ e o fatorial $${k}! = ${factorial(k)}$, o termo correto é exatamente $${correctTex}$.`
+                };
+            } else {
+                const funcs = ['exp', 'sin', 'cos'];
+                const fKey = funcs[Math.floor(Math.random() * funcs.length)];
+                const fName = fKey === 'exp' ? 'e^x' : (fKey === 'sin' ? '\\sin(x)' : '\\cos(x)');
+                const xVal = parseFloat((0.4 + Math.random() * 0.6).toFixed(2));
+                const tol = [0.01, 0.005, 0.001][Math.floor(Math.random() * 3)];
+
+                let minN = 1;
+                for (let n = 1; n <= 8; n++) {
+                    if (Math.abs(evalExactFunc(fKey, xVal) - evalTaylorPoly(fKey, n, 0, xVal)) < tol) { minN = n; break; }
+                }
+
+                let options = [];
+                for (let i = 1; i <= 4; i++) {
+                    const optN = Math.max(1, minN - 2 + i);
+                    if (!options.some(o => o.n === optN)) options.push({ n: optN, tex: `n = ${optN}`, correct: optN === minN });
+                }
+
+                gameState.currentQuestion = {
+                    text: `Qual é o MENOR grau $n$ para aproximar $f(x) = ${fName}$ em $x = ${xVal}$ com erro menor que $\\epsilon = ${tol}$?`,
+                    math: `|f(${xVal}) - P_n(${xVal})| < ${tol}`,
+                    options: options,
+                    explanation: `Para $n = ${minN}$, o erro real é alcançado garantindo que a aproximação fica abaixo da tolerância de $${tol}$. Graus menores terão um erro maior do que o permitido.`
+                };
+            }
+
+            renderQuestionUI();
+        }
+
+        function renderQuestionUI() {
+            const q = gameState.currentQuestion;
+            document.getElementById('game-question-text').innerText = q.text;
+            renderMathInElement(document.getElementById('game-question-text'), { delimiters: [{left: "$", right: "$", display: false}] });
+
+            katex.render(q.math, document.getElementById('game-question-math'), { throwOnError: false });
+
+            const container = document.getElementById('game-options-container');
+            container.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'p-4 rounded-xl border-2 border-slate-900 bg-white hover:bg-slate-100 transition text-slate-900 font-bold text-center text-sm shadow-[4px_4px_0px_rgba(0,0,0,1)]';
+                btn.onclick = () => handleAnswer(idx);
+                const span = document.createElement('span');
+                btn.appendChild(span);
+                container.appendChild(btn);
+                katex.render(opt.tex, span, { throwOnError: false });
+            });
+        }
+
+        function handleAnswer(selectedIndex) {
+            if (gameState.answered) return;
+            gameState.answered = true;
+
+            const q = gameState.currentQuestion;
+            const selectedOpt = q.options[selectedIndex];
+            const feedbackBox = document.getElementById('game-feedback');
+            const container = document.getElementById('game-options-container');
+
+            Array.from(container.children).forEach((btn, idx) => {
+                btn.disabled = true;
+                if (q.options[idx].correct) {
+                    btn.className = 'p-4 rounded-xl border-2 border-green-600 bg-green-100 text-green-900 font-bold text-center text-sm shadow-[4px_4px_0px_rgba(0,0,0,1)] opacity-100';
+                } else {
+                    btn.className = 'p-4 rounded-xl border-2 border-slate-300 bg-slate-50 text-slate-400 font-bold text-center text-sm opacity-50';
+                }
+            });
+
+            feedbackBox.classList.remove('hidden');
+            if (selectedOpt.correct) {
+                gameState.score += 100;
+                gameState.streak += 1;
+                feedbackBox.className = 'p-4 rounded-xl text-sm font-medium leading-relaxed transition-all my-2 bg-green-100 border-2 border-green-600 text-green-900';
+                feedbackBox.innerHTML = `<strong><i class="fa-solid fa-check mr-1"></i> Correto! (+100 pts)</strong><br><br>${q.explanation}`;
+            } else {
+                gameState.streak = 0;
+                feedbackBox.className = 'p-4 rounded-xl text-sm font-medium leading-relaxed transition-all my-2 bg-red-100 border-2 border-redmat-red text-red-900';
+                feedbackBox.innerHTML = `<strong><i class="fa-solid fa-xmark mr-1"></i> Incorreto!</strong><br><br>${q.explanation}`;
+            }
+
+            renderMathInElement(feedbackBox, { delimiters: [{left: "$", right: "$", display: false}] });
+
+            document.getElementById('game-score').innerText = gameState.score;
+            document.getElementById('game-streak').innerText = `${gameState.streak} 🔥`;
+            document.getElementById('btn-next-question').classList.remove('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] });
+            updatePlot();
+            setGameMode(1);
+        });
+    </script>
+</body>
+</html>
